@@ -1,0 +1,36 @@
+#Vidya - A wholistic tool for getting knowledge on Maths, English, Verbal and Quantitative Knowledge for Grade 5 to Grade 7. 
+
+#Problem Statement
+Developing students from Grade 5-7 needs more focus on their studies as they are moving forward to secondary college. Along with they also have to be keep track of their co-corricular activities. It's get difficult to keep track of their studies, current level, time management etc. 
+
+
+#product outcome
+This application will help Students to:
+
+- Generate exam style learning on English, Math, Verbal and Quantitative aptitude. 
+- Take input for Student for their extra cirricular and other commitments. 
+- Generate a time table which fits their schedule. 
+- Keep track in terms of weekly achivements and display %age as target achieved, along with storng and weak areas to focus. 
+- Provide holistic plan for next 3 years i.e from Grade 5 to Grade 7. 
+
+#Assumptions
+- Application needs to be kids friendly with graphics. 
+- Authentication is required to be created for the student. 
+- All the data needs to be stored in local database i.e. postgresql
+- Time tracking needs to be in application. 
+- Schedule for the day along with time should be visible to the student and a provision need to be in the schedule to tick mark the extra co-cirricular activities manually and other task should be mark completed as completed in the application. 
+
+#Acceptance Criteria
+- A login prompt is presented and a provision for registration is available.
+- A Form is present to the student on login to add their timings for extra cirricular activities and school timings. 
+- Student can edit their schedule. 
+- A plan is created for the student for English, Maths, quantitavive and verbal aptitude. 
+- Exams needs to be 4 in number and should be for 45 mins for each exam. 
+- App runs locally on the Mac OS. 
+
+
+# open questions
+- What all topics needs to be covered for each year?
+- How flexible application should be for student or it's better to have a admin login who will manage the schedule changes?
+
+

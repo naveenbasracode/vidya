@@ -1,0 +1,32 @@
+
+# Task : Create feature request from epic
+##Context
+-/Users/naveenbasra/vidya/specification.txt
+
+List the file at /Users/naveenbasra/vidya/specification.txt. Confirm it's present and proceed
+#Step1 : Clarify Stage
+Identify ambiguities in the epic that would affect scope or acceptance critieira. Ask up to 5 clarifying questions. 
+
+After receiving answers, confirm: "Ready to generate the spec. Shall I proceed"
+
+#Step 2: Generate first-draft specification
+
+Create a structured markdown feature specification with these sections. 
+1. Goal and expected outcome. 
+2. Target users and scenarios. 
+3. Sope and out of scope. 
+4. Functional requirements. (observable, independently testable)
+5. Non-functional requirements. (with measurable thresholds)
+6. Acceptance criteria in Given /when / then format of each major functional requirement. 
+7. Assumptions and open questions (each with an owner placeholder)
+
+# Rules
+- Extremently observable behavior only. No API design, database schema, architecture, or implementation tasks. 
+- Techonology constraints listed only where they affect observable behavior. 
+- Every functional requirement must be testable and traced to an accepted criterion. 
+- Evern non-functional requiremnt must include a measurable threshold. 
+
+After presenting the draft ask : Does this look right? Should I refine anything before we review it ?
+
+# Output
+Save to /Users/naveenbasra/vidya/feature-spec.md

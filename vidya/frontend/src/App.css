@@ -1,0 +1,25 @@
+.cds__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.cds__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.cds__title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.cds__subtitle {
+  font-size: 1.5rem;
+}
+
+.cds__description {
+  font-size: 1rem;
+}
