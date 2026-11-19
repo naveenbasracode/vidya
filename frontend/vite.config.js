@@ -1,54 +1,32 @@
-/**
- * Copyright IBM Corp. 2025, 2026
- *
- * This source code is licensed under the Apache-2.0 license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import i18nextLoader from 'vite-plugin-i18next-loader';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
+// The React app runs on http://localhost:3000 and forwards /api calls to the backend on port 5000.
 export default defineConfig({
-  plugins: [
-    react(),
-    /**
-     * Loads i18n translation JSON files from src/locales at build time.
-     * Files are resolved by basename (e.g., de.json becomes the 'de' namespace),
-     * making translations available to i18next without runtime file fetching.
-     */
-    i18nextLoader({
-      paths: ['./src/locales'],
-      namespaceResolution: 'basename',
-    }),
-  ],
+  plugins: [react()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler',
+        // Carbon's Sass triggers deprecation notices in newer Sass versions; they are harmless.
+        quietDeps: true,
+        silenceDeprecations: ['mixed-decls', 'import', 'global-builtin', 'legacy-js-api'],
+      },
+    },
+  },
   server: {
-    // Automatically find an available port if the default is in use
-    strictPort: false,
-    hmr: {
-      // Let Vite automatically find an available port for WebSocket/HMR
-      // This prevents "Port is already in use" errors for the WebSocket server
-      clientPort: undefined,
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_TARGET || 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   },
   preview: {
-    // Automatically find an available port if the default is in use
-    strictPort: false,
-  },
-  ssr: {
-    // Ensure proper handling of external dependencies in SSR
-    noExternal: [],
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.js',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      include: ['src/**'],
-      exclude: ['src/test/**', 'src/__tests__/**', 'src/**/*.scss', 'src/locales/**', 'src/stories/**'],
+    port: 3000,
+    proxy: {
+      '/api': { target: process.env.VITE_API_TARGET || 'http://localhost:5000', changeOrigin: true },
     },
   },
 });
