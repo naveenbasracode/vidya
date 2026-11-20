@@ -10,6 +10,11 @@ export class TopicNotFoundError extends Error {}
 
 const withIds = (qs: Omit<Question, 'id'>[], prefix = 'q'): Question[] => qs.map((q, i) => ({ ...q, id: `${prefix}${i + 1}` }));
 
+/** Identity of a question for de-duplication: several bank items share a prompt
+ *  ("Which word is spelled correctly?") and differ only in their options. */
+const qKey = (q: { prompt: string; answer?: string | number; options?: string[] }) =>
+  `${q.prompt}|${q.answer ?? ''}|${[...(q.options ?? [])].sort().join('/')}`;
+
 /** Make one question for a curriculum topic. `used` avoids repeating bank items within a set. */
 const questionForTopic = (topic: Topic, rng: Rng, used: Set<string>, allowEssay: boolean): Omit<Question, 'id'> | null => {
   const gen = GENERATORS[topic.id];
@@ -17,17 +22,17 @@ const questionForTopic = (topic: Topic, rng: Rng, used: Set<string>, allowEssay:
     // Generated questions are effectively unlimited; retry a few times to avoid duplicates.
     for (let i = 0; i < 5; i++) {
       const q = gen(rng);
-      if (!used.has(q.prompt)) {
-        used.add(q.prompt);
+      if (!used.has(qKey(q))) {
+        used.add(qKey(q));
         return { ...q, topic: topic.id };
       }
     }
     return null;
   }
-  const items = (BANK[topic.id] ?? []).filter((b) => (allowEssay || b.type !== 'essay') && !used.has(b.prompt));
+  const items = (BANK[topic.id] ?? []).filter((b) => (allowEssay || b.type !== 'essay') && !used.has(qKey(b)));
   if (!items.length) return null;
   const item = pick(rng, items);
-  used.add(item.prompt);
+  used.add(qKey(item));
   const type = item.type ?? 'mcq';
   return { ...item, type, topic: topic.id, options: item.options ? shuffle(rng, item.options) : undefined };
 };

@@ -166,3 +166,15 @@ test('PDF practice answer choices are distinct ignoring case (issue #6)', () => 
     }
   }
 });
+
+test('bank topics give as many distinct questions as the bank holds (issue #7)', async () => {
+  const { BANK } = await import('../src/domain/bank.js');
+  for (const [topicId, items] of Object.entries(BANK)) {
+    if (topicId === 'essay-writing') continue;
+    const qs = buildPractice(topicId, 30, createRng(5));
+    assert.equal(qs.length, items.length, `${topicId}: got ${qs.length} of ${items.length}`);
+    const keys = new Set(qs.map((q) => `${q.prompt}|${q.answer}`));
+    assert.equal(keys.size, qs.length, `${topicId}: duplicate questions`);
+  }
+  assert.equal(buildPractice('spelling', 5, createRng(1)).length, 5);
+});
