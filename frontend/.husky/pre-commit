@@ -1,1 +1,0 @@
-git rev-parse -q --no-revs --verify MERGE_HEAD || npx lint-staged --concurrent false

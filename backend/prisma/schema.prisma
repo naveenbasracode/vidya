@@ -1,0 +1,244 @@
+// Vidya - Study & Activity Planner data model.
+// Dates for calendar days are stored as "YYYY-MM-DD" strings and clock times as "HH:MM"
+// strings so that schedules are independent of server/client timezone handling.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  PARENT
+  ADMIN
+}
+
+enum Subject {
+  MATHS
+  ENGLISH
+  VERBAL
+  QUANTITATIVE
+}
+
+enum CommitmentKind {
+  SCHOOL
+  ACTIVITY
+  OTHER
+}
+
+enum ScoreKind {
+  EXAM
+  PRACTICE
+  ESSAY
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(STUDENT)
+  grade        Int? // 5, 6 or 7 for students
+  onboarded    Boolean  @default(false)
+  settings     Json? // scheduler preferences (students)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  childLinks    ParentLink[]   @relation("ParentSide")
+  parentLinks   ParentLink[]   @relation("ChildSide")
+  commitments   Commitment[]
+  habits        Habit[]
+  studyBlocks   StudyBlock[]
+  scores        Score[]
+  examAttempts  ExamAttempt[]
+  notifications Notification[]
+  documents     Document[]
+  practiceSets  PracticeSet[]  @relation("PracticeStudent")
+  assignedSets  PracticeSet[]  @relation("PracticeCreator")
+
+  @@map("users")
+}
+
+model ParentLink {
+  parentId  String
+  studentId String
+  parent    User     @relation("ParentSide", fields: [parentId], references: [id], onDelete: Cascade)
+  student   User     @relation("ChildSide", fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([parentId, studentId])
+  @@map("parent_links")
+}
+
+// School hours and co-curricular activities (e.g. Drum class, Wednesday 18:00-19:00).
+model Commitment {
+  id              String         @id @default(uuid())
+  studentId       String
+  student         User           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  kind            CommitmentKind
+  name            String
+  dayOfWeek       Int // 0 = Sunday ... 6 = Saturday
+  startTime       String // "HH:MM"
+  endTime         String // "HH:MM"
+  practiceMinutes Int? // daily home practice for this activity, e.g. 15
+  createdAt       DateTime       @default(now())
+
+  @@index([studentId])
+  @@map("commitments")
+}
+
+// Daily habits such as "Reading - 15 min" or "Karate practice - 15 min".
+model Habit {
+  id        String     @id @default(uuid())
+  studentId String
+  student   User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name      String
+  minutes   Int        @default(15)
+  active    Boolean    @default(true)
+  source    String     @default("custom") // default | activity | custom
+  createdAt DateTime   @default(now())
+  logs      HabitLog[]
+
+  @@unique([studentId, name])
+  @@map("habits")
+}
+
+model HabitLog {
+  id          String    @id @default(uuid())
+  habitId     String
+  habit       Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date        String // "YYYY-MM-DD"
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  @@unique([habitId, date])
+  @@map("habit_logs")
+}
+
+model StudyBlock {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date        String // "YYYY-MM-DD"
+  startTime   String // "HH:MM"
+  endTime     String // "HH:MM"
+  subject     Subject
+  topic       String?
+  isManual    Boolean   @default(false) // set when a parent/student edits the block
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([studentId, date])
+  @@map("study_blocks")
+}
+
+// Academic record: every graded exam, practice set and essay.
+model Score {
+  id        String    @id @default(uuid())
+  studentId String
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject   Subject
+  kind      ScoreKind
+  topic     String?
+  score     Float // percentage 0-100
+  details   Json?
+  createdAt DateTime  @default(now())
+
+  @@index([studentId, createdAt])
+  @@map("scores")
+}
+
+// A generated practice set. Questions (with answers) stay on the server until submitted.
+model PracticeSet {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     User      @relation("PracticeStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   User?     @relation("PracticeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  subject     Subject
+  topic       String
+  topicName   String
+  source      String    @default("curriculum") // curriculum | document
+  documentId  String?
+  questions   Json
+  answers     Json?
+  result      Json?
+  score       Float?
+  createdAt   DateTime  @default(now())
+  submittedAt DateTime?
+
+  @@index([studentId, createdAt])
+  @@map("practice_sets")
+}
+
+model Exam {
+  id              String        @id @default(uuid())
+  grade           Int
+  subject         Subject
+  title           String
+  durationMinutes Int           @default(45)
+  questions       Json
+  position        Int           @default(0)
+  active          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  attempts        ExamAttempt[]
+
+  @@index([grade])
+  @@map("exams")
+}
+
+model ExamAttempt {
+  id          String    @id @default(uuid())
+  examId      String
+  exam        Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  answers     Json?
+  score       Float?
+  result      Json?
+  timedOut    Boolean   @default(false)
+
+  @@index([studentId])
+  @@map("exam_attempts")
+}
+
+// Curriculum PDFs uploaded by an admin.
+model Document {
+  id           String   @id @default(uuid())
+  subject      Subject
+  grade        Int?
+  originalName String
+  storedName   String
+  sizeBytes    Int
+  pageCount    Int      @default(0)
+  text         String   @default("")
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@map("documents")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type      String // LOW_SCORE | WEEKLY_RED | MISSED_HABIT | MISSED_STUDY
+  severity  String   @default("warning") // info | warning | error
+  message   String
+  read      Boolean  @default(false)
+  dedupeKey String?  @unique
+  createdAt DateTime @default(now())
+
+  @@index([studentId, createdAt])
+  @@map("notifications")
+}

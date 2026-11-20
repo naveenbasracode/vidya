@@ -1,19 +1,36 @@
-import express, { Application } from 'express';
+import express, { type Application } from 'express';
 import cors from 'cors';
-import { authRouter } from './routes/auth';
-import { activityRouter } from './routes/activities';
-import { contentRouter } from './routes/content';
+import { authRouter } from './routes/auth.js';
+import { familyRouter } from './routes/family.js';
+import { plannerRouter } from './routes/planner.js';
+import { learningRouter } from './routes/learning.js';
+import { progressRouter } from './routes/progress.js';
+import { adminRouter } from './routes/admin.js';
+import { authenticate, loadStudent } from './middleware/auth.js';
+import { errorHandler } from './lib/http.js';
+import { SUBJECT_INFO } from './domain/types.js';
+import { TOPICS } from './domain/curriculum.js';
 
-const app: Application = express();
+export const createApp = (): Application => {
+  const app = express();
+  app.use(cors());
+  app.use(express.json({ limit: '1mb' }));
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true }));
+  app.get('/api/curriculum', (_req, res) => res.json({ subjects: SUBJECT_INFO, topics: TOPICS }));
 
-// Routes
-app.use('/api/auth', authRouter);
-app.use('/api/activities', activityRouter);
-app.use('/api/content', contentRouter);
+  app.use('/api/auth', authRouter);
+  app.use('/api/family', familyRouter);
+  app.use('/api/admin', adminRouter);
 
-export default app;
+  // Everything about one student: /api/students/me/... or /api/students/<id>/...
+  const student = express.Router({ mergeParams: true });
+  student.use(plannerRouter, learningRouter, progressRouter);
+  app.use('/api/students/:studentId', authenticate, loadStudent, student);
+
+  app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
+  app.use(errorHandler);
+  return app;
+};
+
+export default createApp;

@@ -1,50 +1,25 @@
-// Configuration for local file system storage of PDF documents.
-// Managed by the Content & Grading Engine.
+// Local file-system storage for curriculum PDFs (TASK-02).
+import fs from 'node:fs';
+import path from 'node:path';
+import { config } from '../config.js';
 
-import { joinedPath } from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/**
- * Base directory for stored documents.
- * By default, this is the 'uploads' folder within the project root.
- */
-const BASE_STORAGE_PATH = joinedPath(process.cwd(), 'uploads');
-
-/**
- * Ensures the storage directory exists before any operations.
- * Should be called during application initialization.
- */
 export const ensureStorageDirectory = () => {
-  if (!fs.existsSync(BASE_STORAGE_PATH)) {
-    fs.mkdirSync(BASE_STORAGE_PATH, { recursive: true });
+  fs.mkdirSync(config.uploadDir, { recursive: true });
+};
+
+/** Absolute path of a stored file. Rejects names that try to escape the upload directory. */
+export const getFilePath = (storedName: string) => {
+  const full = path.resolve(config.uploadDir, storedName);
+  if (!full.startsWith(config.uploadDir + path.sep)) throw new Error('Invalid file name');
+  return full;
+};
+
+export const doesFileExist = (storedName: string) => fs.existsSync(getFilePath(storedName));
+
+export const deleteFile = (storedName: string) => {
+  try {
+    fs.unlinkSync(getFilePath(storedName));
+  } catch {
+    /* already gone */
   }
 };
-
-/**
- * Returns the full path for a specific file in the storage.
- * @param {string} fileName - The name of the file (e.g., 'maths_grade5_algebra.pdf')
- * @returns {string} The absolute path to the file.
- */
-export const getFilePath = (fileName: string) => {
-  return joinedPath(BASE_STORAGE_PATH, fileName);
-};
-
-/**
- * Verifies if a file exists in the storage.
- * @param {string} fileName
- * @returns {boolean}
- */
-export const doesFileExist = (fileName: string) => {
-  return fs.existsSync(joinedPath(BASE_STORAGE_PATH, fileName));
-};
-
-/**
- * Example Usage:
- *
- * ensureStorageDirectory();
- * const path = getFilePath('example.pdf');
- * if (doesFileExist('example.pdf')) { ... }
- */

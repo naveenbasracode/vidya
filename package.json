@@ -1,0 +1,11 @@
+{
+  "name": "vidya",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vidya – study & activity planner for Grades 5-7",
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "dev": "node scripts/dev.mjs",
+    "test": "npm test --prefix backend"
+  }
+}
