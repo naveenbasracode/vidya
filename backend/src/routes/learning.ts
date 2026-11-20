@@ -8,7 +8,7 @@ import { getTopic, topicsFor } from '../domain/curriculum.js';
 import { buildMixedPractice, buildPractice, buildPracticeFromText, TopicNotFoundError } from '../domain/questions.js';
 import { gradeSet } from '../domain/grading.js';
 import { createRng } from '../domain/random.js';
-import { alertOnScore } from '../services/students.js';
+import { alertOnScore, replanAfterScore } from '../services/students.js';
 
 export const learningRouter = Router({ mergeParams: true });
 
@@ -162,6 +162,7 @@ learningRouter.post(
         details: json({ practiceSetId: set.id, topicName: set.topicName }),
       },
     });
+    await replanAfterScore(sid(res));
     await alertOnScore(sid(res), set.subject, graded.score, `${isEssay ? 'Essay' : 'Practice'} – ${set.topicName}`);
     res.json({ set: setForClient(updated, sid(res)) });
   }),
@@ -255,6 +256,7 @@ learningRouter.post(
         details: json({ examId: attempt.examId, attemptId: attempt.id, title: attempt.exam.title }),
       },
     });
+    await replanAfterScore(sid(res));
     await alertOnScore(sid(res), attempt.exam.subject, graded.score, attempt.exam.title);
     res.json({ attempt: { id: updated.id, score: updated.score, timedOut, submittedAt: updated.submittedAt }, result: graded, questions: attempt.exam.questions });
   }),

@@ -21,7 +21,7 @@ export default defineConfig({
         api: 'modern-compiler',
         // Carbon's Sass triggers deprecation notices in newer Sass versions; they are harmless.
         quietDeps: true,
-        silenceDeprecations: ['mixed-decls', 'import', 'global-builtin', 'legacy-js-api'],
+        silenceDeprecations: ['import', 'global-builtin', 'legacy-js-api'],
       },
     },
   },

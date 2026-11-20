@@ -291,6 +291,25 @@ test('preferences: invalid window rejected; studying around activities when skip
   assert.ok(wed.every((b: any) => b.endTime <= '17:45' || b.startTime >= '19:15'), 'Wednesday study avoids Drums 18:00-19:00');
 });
 
+test('a low score re-plans the rest of the week with that subject first (issue #3)', async (t) => {
+  const today = todayLocal();
+  const tomorrow = addDays(today, 1);
+  if (tomorrow > addDays(startOfWeek(today), 6)) return t.skip('today is Sunday: nothing left to re-plan this week');
+  const r = await ok('POST', '/auth/register', { name: 'Replan', email: 'replan@test.local', password: 'secret1', role: 'STUDENT', grade: 5 });
+  await ok('PUT', '/students/me/commitments', { commitments: [] }, r.token);
+  await ok('PATCH', '/students/me', { onboarded: true, today }, r.token);
+  const ps = await ok('POST', '/students/me/practice', { subject: 'QUANTITATIVE', topicId: 'averages', count: 5 }, r.token);
+  await ok('POST', `/students/me/practice/${ps.set.id}/submit`, { answers: {} }, r.token);
+  const sched = await ok('GET', `/students/me/schedule?today=${today}`, undefined, r.token);
+  const upcoming = sched.blocks.filter((b: any) => b.date >= tomorrow);
+  assert.ok(upcoming.length > 0);
+  assert.equal(upcoming[0].subject, 'QUANTITATIVE', 'first upcoming block is the weakest subject');
+  const count = (sub: string) => upcoming.filter((b: any) => b.subject === sub).length;
+  for (const other of ['MATHS', 'ENGLISH', 'VERBAL']) assert.ok(count('QUANTITATIVE') >= count(other));
+  const alerts = await ok('GET', `/students/me/notifications?today=${today}`, undefined, r.token);
+  assert.match(alerts.notifications[0].message, /Upcoming study blocks now give Quantitative Reasoning more time/);
+});
+
 /** Build a small valid one-page PDF with the given lines of text. */
 function makePdf(lines: string[]): string {
   const esc = (t: string) => t.replace(/[\\()]/g, (c) => `\\${c}`);

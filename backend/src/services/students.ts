@@ -80,6 +80,20 @@ export const regenerateWeek = async (studentId: string, weekStart: string, fromD
   return out;
 };
 
+/**
+ * After a new graded result, re-plan the rest of this week (from tomorrow) so the weakest
+ * subjects come first. Today's blocks and hand-edited or completed blocks are left alone.
+ * On Sunday there is nothing left to re-plan; next week is planned when it is first viewed.
+ */
+export const replanAfterScore = async (studentId: string, today: string = todayLocal()) => {
+  const student = await prisma.user.findUnique({ where: { id: studentId } });
+  if (!student?.onboarded) return null;
+  const weekStart = startOfWeek(today);
+  const tomorrow = addDays(today, 1);
+  if (tomorrow > addDays(weekStart, 6)) return null;
+  return regenerateWeek(studentId, weekStart, tomorrow);
+};
+
 /** Ensure a week has a timetable; generate it the first time the week is viewed. */
 export const ensureWeekGenerated = async (studentId: string, weekStart: string, today: string) => {
   const end = addDays(weekStart, 6);
@@ -130,7 +144,7 @@ export const alertOnScore = async (studentId: string, subject: Subject, score: n
     {
       type: 'LOW_SCORE',
       severity: 'error',
-      message: `${SUBJECT_INFO[subject].emoji} ${label}: scored ${Math.round(score)}% (below 85%). Extra ${SUBJECT_INFO[subject].label} practice has been prioritised.`,
+      message: `${SUBJECT_INFO[subject].emoji} ${label}: scored ${Math.round(score)}% (below 85%). Upcoming study blocks now give ${SUBJECT_INFO[subject].label} more time.`,
     },
   ]);
 };
