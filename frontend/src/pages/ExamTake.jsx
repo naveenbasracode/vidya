@@ -34,15 +34,23 @@ export default function ExamTake() {
   const answersRef = useRef(answers);
   answersRef.current = answers;
 
+  // Start (or resume) the exam exactly once, even when React runs effects twice in development.
+  const startRequest = useRef(null);
   useEffect(() => {
-    studentApi(`/exams/${examId}/start`, { method: 'POST', body: {} })
+    if (!startRequest.current) startRequest.current = studentApi(`/exams/${examId}/start`, { method: 'POST', body: {} });
+    let cancelled = false;
+    startRequest.current
       .then((s) => {
+        if (cancelled) return;
         // correct for any difference between this computer's clock and the server's
         const offset = Date.now() - new Date(s.attempt.serverNow).getTime();
         setSession({ ...s, deadlineLocal: new Date(s.attempt.deadline).getTime() + offset });
         setAnswers(loadAnswers(s.attempt.id));
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => !cancelled && setError(e.message));
+    return () => {
+      cancelled = true;
+    };
   }, [examId, studentApi]);
 
   const submit = useCallback(

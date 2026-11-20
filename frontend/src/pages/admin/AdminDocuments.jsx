@@ -28,7 +28,7 @@ export default function AdminDocuments() {
       form.append('subject', subject);
       if (grade) form.append('grade', grade);
       const r = await api('/admin/documents', { method: 'POST', form });
-      setMsg(r.warning ? { kind: 'warning', text: r.warning } : { kind: 'success', text: `Uploaded “${r.document.originalName}” (${r.document.pageCount} pages).` });
+      setMsg(r.warning ? { kind: 'warning', text: r.warning } : { kind: 'success', text: `Uploaded “${r.document.originalName}” (${r.document.pageCount} page${r.document.pageCount === 1 ? '' : 's'}).` });
       setFile(null);
       if (fileRef.current) fileRef.current.value = '';
       reload();
@@ -109,7 +109,7 @@ export default function AdminDocuments() {
                   {d.originalName}
                 </button>
                 <div className="muted small">
-                  {d.pageCount} pages · {Math.round(d.sizeBytes / 1024)} KB · {d.grade ? `Grade ${d.grade}` : 'Any grade'} · {new Date(d.createdAt).toLocaleDateString()}
+                  {d.pageCount} page{d.pageCount === 1 ? '' : 's'} · {Math.round(d.sizeBytes / 1024)} KB · {d.grade ? `Grade ${d.grade}` : 'Any grade'} · {new Date(d.createdAt).toLocaleDateString()}
                   {d.characters === 0 && ' · ⚠️ no readable text'}
                 </div>
                 {d.topicsFound.length > 0 && <div className="small">Topics found: {d.topicsFound.join(', ')}</div>}

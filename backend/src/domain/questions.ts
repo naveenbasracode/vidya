@@ -137,7 +137,10 @@ export const buildPracticeFromText = (
       `The topic "${label}" was not found in this PDF. Please choose a different topic or upload a PDF that covers it.`,
     );
   }
-  const vocabulary = [...new Set(splitSentences(text).flatMap(contentWords))];
+  // One spelling per word, ignoring case, so answer choices are always distinct.
+  const byLower = new Map<string, string>();
+  for (const w of splitSentences(text).flatMap(contentWords)) if (!byLower.has(w.toLowerCase())) byLower.set(w.toLowerCase(), w);
+  const vocabulary = [...byLower.values()];
   const out: Omit<Question, 'id'>[] = [];
   for (const sentence of shuffle(rng, sentences)) {
     if (out.length >= count) break;

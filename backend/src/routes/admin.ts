@@ -107,7 +107,7 @@ adminRouter.get(
   '/exams',
   ah(async (req, res) => {
     const grade = req.query.grade ? int(Number(req.query.grade), 'grade', 5, 7) : undefined;
-    const exams = await prisma.exam.findMany({ where: { grade }, orderBy: [{ grade: 'asc' }, { position: 'asc' }], include: { _count: { select: { attempts: true } } } });
+    const exams = await prisma.exam.findMany({ where: { grade }, orderBy: [{ grade: 'asc' }, { position: 'asc' }], include: { _count: { select: { attempts: { where: { submittedAt: { not: null } } } } } } });
     res.json({ exams: exams.map((e) => ({ ...e, ...SUBJECT_INFO[e.subject], attemptCount: e._count.attempts })) });
   }),
 );

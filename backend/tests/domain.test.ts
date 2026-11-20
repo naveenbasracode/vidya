@@ -155,3 +155,14 @@ test('weeks start on Monday', () => {
   assert.equal(startOfWeek('2026-11-16'), '2026-11-16');
   assert.equal(addDays('2026-12-31', 1), '2027-01-01');
 });
+
+test('PDF practice answer choices are distinct ignoring case (issue #6)', () => {
+  const text =
+    'Chapter 3: Fractions. Fractions represent parts of a whole object or group. The numerator is the number written on top of a fraction. The denominator shows how many equal parts make the whole. Equivalent fractions have the same value but use different numbers.';
+  for (let seed = 1; seed <= 200; seed++) {
+    for (const q of buildPracticeFromText(text, 'Fractions', 5, createRng(seed))) {
+      const lower = q.options!.map((o) => o.toLowerCase());
+      assert.equal(new Set(lower).size, lower.length, `seed ${seed}: ${q.options!.join(' / ')}`);
+    }
+  }
+});
