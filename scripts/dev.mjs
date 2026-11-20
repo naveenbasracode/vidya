@@ -1,9 +1,31 @@
 // Runs the backend (port 5000) and frontend (port 3000) together. Ctrl+C stops both.
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// Make sure each app's installed packages match its package.json (catches a missing or stale `npm install`).
+const missing = [];
+for (const dir of ['backend', 'frontend']) {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, dir, 'package.json'), 'utf8'));
+  for (const name of Object.keys({ ...pkg.dependencies, ...pkg.devDependencies })) {
+    const installed = path.join(root, dir, 'node_modules', name, 'package.json');
+    if (!fs.existsSync(installed)) {
+      missing.push(`${dir}: ${name}`);
+      continue;
+    }
+    const wantMajor = (pkg.dependencies?.[name] ?? pkg.devDependencies?.[name]).match(/\d+/)?.[0];
+    const haveMajor = JSON.parse(fs.readFileSync(installed, 'utf8')).version.split('.')[0];
+    if (wantMajor && wantMajor !== haveMajor) missing.push(`${dir}: ${name} (need v${wantMajor}, found v${haveMajor})`);
+  }
+}
+if (missing.length) {
+  console.error(`\n✖ Some packages are missing or the wrong version:\n  ${missing.join('\n  ')}\n`);
+  console.error('Fix it by running:  ./scripts/setup.sh   (or `npm install` inside backend/ and frontend/)\n');
+  process.exit(1);
+}
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 const run = (name, dir, color) => {
