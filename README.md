@@ -75,8 +75,13 @@ With Homebrew PostgreSQL the database user is usually your macOS username with n
 ## Tests
 
 ```bash
-cd backend && npm test
+cd backend
+npm test            # unit tests (no database needed)
+npm run test:api    # API tests against the vidya_test database (wiped on every run)
+npm run test:all    # both
 ```
+
+The API tests start the real server and exercise registration, onboarding, the timetable, habits, practice, PDF upload, exams, achievements, alerts, the roadmap, parent overrides, admin tools and access control. They only ever use the database named in `TEST_DATABASE_URL` (default `vidya_test`), never your real data.
 
 The unit tests cover the scheduler (no clashes, activity days free, weakest subject first, manual edits respected), Green/Amber/Red thresholds, weekly achievement maths, question generation for every topic, grading, essay scoring, PDF-topic matching and the roadmap.
 
