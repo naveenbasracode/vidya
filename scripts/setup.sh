@@ -59,12 +59,17 @@ if [ ! -f backend/.env ]; then
 DATABASE_URL=postgresql://${DB_USER}@localhost:5432/vidya_db
 TEST_DATABASE_URL=postgresql://${DB_USER}@localhost:5432/vidya_test
 JWT_SECRET=${SECRET}
-PORT=5000
+PORT=5050
 UPLOAD_DIR=uploads
 EOF
   echo "Created backend/.env (database user: ${DB_USER}). Edit it if your PostgreSQL needs a password."
 else
   echo "backend/.env already points at vidya_db ✔"
+fi
+# Port 5000 clashes with macOS AirPlay Receiver; move an existing .env to 5050.
+if grep -q '^PORT=5000$' backend/.env; then
+  perl -pi -e 's/^PORT=5000$/PORT=5050/' backend/.env
+  echo "Changed the API port in backend/.env from 5000 to 5050 (5000 is used by macOS AirPlay Receiver)."
 fi
 
 say "Creating databases vidya_db and vidya_test (if needed)"

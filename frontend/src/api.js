@@ -39,7 +39,7 @@ export async function api(path, { method = 'GET', body, form } = {}) {
   try {
     res = await fetch(`/api${path}`, { method, headers, body: form ?? (body !== undefined ? JSON.stringify(body) : undefined) });
   } catch {
-    throw new ApiError(0, 'Cannot reach the Vidya server. Is the backend running on port 5000?');
+    throw new ApiError(0, 'Cannot reach the Vidya server. Is the backend running on port 5050?');
   }
   if (res.status === 204) return null;
   let data = null;
@@ -51,7 +51,7 @@ export async function api(path, { method = 'GET', body, form } = {}) {
   }
   if (!res.ok) {
     if (res.status === 401 && token) onUnauthorized();
-    const fallback = res.status === 502 || res.status === 504 ? 'Cannot reach the Vidya server. Is the backend running on port 5000?' : `Request failed (${res.status})`;
+    const fallback = res.status === 502 || res.status === 504 ? 'Cannot reach the Vidya server. Is the backend running on port 5050?' : `Request failed (${res.status})`;
     throw new ApiError(res.status, data?.error || fallback);
   }
   return data;

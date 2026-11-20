@@ -7,7 +7,7 @@ if (!jwtSecret) {
 }
 
 export const config = {
-  port: Number(process.env.PORT ?? 5000),
+  port: Number(process.env.PORT ?? 5050),
   jwtSecret: jwtSecret || 'vidya-dev-secret-change-me',
   jwtExpiresIn: '7d',
   uploadDir: path.resolve(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads'),

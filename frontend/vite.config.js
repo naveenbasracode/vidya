@@ -1,7 +1,18 @@
+import fs from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// The React app runs on http://localhost:3000 and forwards /api calls to the backend on port 5000.
+// The React app runs on http://localhost:3000 and forwards /api calls to the backend.
+// The backend port is read from backend/.env (PORT), default 5050. Port 5000 is avoided
+// because macOS AirPlay Receiver listens on it.
+const backendPort = (() => {
+  try {
+    return fs.readFileSync(new URL('../backend/.env', import.meta.url), 'utf8').match(/^PORT=(\d+)/m)?.[1];
+  } catch {
+    return undefined;
+  }
+})();
+const apiTarget = process.env.VITE_API_TARGET || `http://localhost:${backendPort || 5050}`;
 export default defineConfig({
   plugins: [react()],
   css: {
@@ -18,7 +29,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_TARGET || 'http://localhost:5000',
+        target: apiTarget,
         changeOrigin: true,
       },
     },
@@ -26,7 +37,7 @@ export default defineConfig({
   preview: {
     port: 3000,
     proxy: {
-      '/api': { target: process.env.VITE_API_TARGET || 'http://localhost:5000', changeOrigin: true },
+      '/api': { target: apiTarget, changeOrigin: true },
     },
   },
 });

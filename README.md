@@ -2,7 +2,7 @@
 
 Vidya helps students in **Grades 5–7** balance study in **Maths, English, Verbal and Quantitative Reasoning** with their co-curricular activities (sports, music, clubs), and gives parents a clear view of progress.
 
-It runs locally on your Mac: a React web app at `http://localhost:3000`, a Node.js API on port 5000 and a local PostgreSQL database.
+It runs locally on your Mac: a React web app at `http://localhost:3000`, a Node.js API on port 5050 and a local PostgreSQL database.
 
 ## What it does
 
@@ -35,7 +35,7 @@ Then, from the project folder:
 
 ```bash
 ./scripts/setup.sh     # creates backend/.env, the vidya_db database, tables, exams and demo accounts
-npm run dev            # starts the API (port 5000) and the web app (port 3000)
+npm run dev            # starts the API (port 5050) and the web app (port 3000)
 ```
 
 Open **http://localhost:3000**.
@@ -61,7 +61,7 @@ cp .env.example .env          # then edit DATABASE_URL / JWT_SECRET
 npm install
 npx prisma migrate dev --name init
 npx prisma db seed
-npm run dev                   # http://localhost:5000/api/health → {"ok":true}
+npm run dev                   # http://localhost:5050/api/health → {"ok":true}
 
 # 2. Frontend (new terminal)
 cd frontend

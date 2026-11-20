@@ -1,4 +1,4 @@
-// Runs the backend (port 5000) and frontend (port 3000) together. Ctrl+C stops both.
+// Runs the backend (port 5050) and frontend (port 3000) together. Ctrl+C stops both.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,6 +28,11 @@ if (missing.length) {
 }
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
+// Everything is also written to logs/dev.log (handy for troubleshooting).
+fs.mkdirSync(path.join(root, 'logs'), { recursive: true });
+const logFile = fs.createWriteStream(path.join(root, 'logs', 'dev.log'), { flags: 'a' });
+logFile.write(`\n===== npm run dev started ${new Date().toISOString()} =====\n`);
+
 const run = (name, dir, color) => {
   const child = spawn(npm, ['run', 'dev'], { cwd: path.join(root, dir), env: process.env });
   const prefix = `\x1b[${color}m[${name}]\x1b[0m `;
@@ -37,7 +42,10 @@ const run = (name, dir, color) => {
         .toString()
         .split('\n')
         .filter(Boolean)
-        .forEach((line) => out.write(prefix + line + '\n')),
+        .forEach((line) => {
+          out.write(prefix + line + '\n');
+          logFile.write(`[${name}] ${line}\n`);
+        }),
     );
   pipe(child.stdout, process.stdout);
   pipe(child.stderr, process.stderr);
