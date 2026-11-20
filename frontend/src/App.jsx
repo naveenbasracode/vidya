@@ -29,7 +29,8 @@ function RequireAuth({ children }) {
 
 /** Student pages need a student: the logged-in student, or a parent's selected child. */
 function RequireStudent({ children }) {
-  const { user, studentId } = useAuth();
+  const { user, studentId, childrenReady } = useAuth();
+  if (!childrenReady) return <Loading description="Loading" withOverlay={false} />;
   if (user.role === 'STUDENT' && !user.onboarded) return <Navigate to="/setup" replace />;
   if (!studentId) return <Navigate to={user.role === 'ADMIN' ? '/admin/documents' : '/family'} replace />;
   return children;

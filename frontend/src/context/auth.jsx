@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(!!getToken());
   const [childrenList, setChildrenList] = useState([]);
+  const [childrenLoaded, setChildrenLoaded] = useState(false);
   const [selectedChildId, setSelectedChildIdState] = useState(() => {
     try {
       return localStorage.getItem(CHILD_KEY);
@@ -30,6 +31,7 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
     setChildrenList([]);
+    setChildrenLoaded(false);
   }, []);
 
   useEffect(() => setUnauthorizedHandler(logout), [logout]);
@@ -61,9 +63,10 @@ export function AuthProvider({ children }) {
       .then((kids) => {
         if (!kids.some((k) => k.id === selectedChildId)) setSelectedChildId(kids[0]?.id ?? null);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setChildrenLoaded(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id]);
 
   const login = useCallback(async (email, password) => {
     const data = await api('/auth/login', { method: 'POST', body: { email, password } });
@@ -93,6 +96,8 @@ export function AuthProvider({ children }) {
       isStudent,
       isParent: user?.role === 'PARENT',
       isAdmin: user?.role === 'ADMIN',
+      /** False while a parent's/admin's children are still loading (don't redirect yet). */
+      childrenReady: isStudent || childrenLoaded,
       childrenList,
       refreshChildren,
       selectedChild,
@@ -101,7 +106,7 @@ export function AuthProvider({ children }) {
       studentId: isStudent ? 'me' : selectedChild?.id ?? null,
       studentName: isStudent ? user?.name : selectedChild?.name,
     };
-  }, [user, loading, login, register, logout, refreshUser, childrenList, refreshChildren, selectedChildId, setSelectedChildId]);
+  }, [user, loading, login, register, logout, refreshUser, childrenList, childrenLoaded, refreshChildren, selectedChildId, setSelectedChildId]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
